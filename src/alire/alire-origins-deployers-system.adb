@@ -1,5 +1,6 @@
 with Alire.Origins.Deployers.System.Apt;
 with Alire.Origins.Deployers.System.Pacman;
+with Alire.Origins.Deployers.System.Dnf;
 with Alire.Platform;
 with Alire.Platforms;
 with Alire.Utils.User_Input;
@@ -89,7 +90,10 @@ package body Alire.Origins.Deployers.System is
                                  with others => <>),
          when Platforms.Pacman =>
             System.Pacman.Deployer'(Deployers.Deployer'(Base => From)
-                                    with others => <>));
+                                    with others => <>),
+         when Platforms.Dnf =>
+            System.Dnf.Deployer'(Deployers.Deployer'(Base => From)
+                                 with others => <>));
       --  TODO: add here other native package managers as they get
       --  implemented.
 
