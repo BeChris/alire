@@ -4,9 +4,18 @@ with Alire.Errors;
 
 with GNAT.Regpat;
 
-package body Alire.Origins.Deployers.System.Dnf is
+package body Alire.Origins.Deployers.System.Rh_Rpm_Wrapper is
 
    package Subprocess renames Alire.OS_Lib.Subprocess;
+
+   ---------------------
+   -- Wrapper_Command --
+   ---------------------
+
+   function Wrapper_Command (This : Deployer) return String is
+     (case This.Wrapper is
+         when Dnf => "dnf",
+         when Yum => "yum");
 
    ----------------------
    -- Already_Installed --
@@ -16,9 +25,11 @@ package body Alire.Origins.Deployers.System.Dnf is
    function Already_Installed (This : Deployer) return Boolean is
       Pck    : String renames This.Base.Package_Name;
 
+      Wrapper : constant String := Wrapper_Command (This);
+
       Output : constant Utils.String_Vector :=
                  Subprocess.Checked_Spawn_And_Capture
-                   ("dnf",
+                   (Wrapper,
                     Empty_Vector &
                       "-y" &
                       "list" &
@@ -34,7 +45,7 @@ package body Alire.Origins.Deployers.System.Dnf is
          return True;
       else
          Trace.Detail ("Cannot find package '" & Pck &
-                         "' in dnf installed list: '" &
+                         "' in " & Wrapper & " installed list: '" &
                          Output.Flatten & "'");
          return False;
       end if;
@@ -50,9 +61,11 @@ package body Alire.Origins.Deployers.System.Dnf is
       Regexp : constant String := "^" & This.Base.Package_Name &
         "[^\s]+\s+([^\s]+)";
 
+      Wrapper : constant String := Wrapper_Command (This);
+
       Output    : constant Utils.String_Vector :=
         Subprocess.Checked_Spawn_And_Capture
-          ("dnf",
+          (Wrapper,
            Empty_Vector &
              "-y" &
              "list" &
@@ -64,7 +77,8 @@ package body Alire.Origins.Deployers.System.Dnf is
       Matches : Match_Array (1 .. 1);
    begin
       for Line of Output loop
-         Trace.Debug ("Extracting native version from dnf output: " & Line);
+         Trace.Debug ("Extracting native version from " & Wrapper &
+                        " output: " & Line);
          Match (Regexp, Line, Matches);
          if Matches (1) /= No_Match then
             Trace.Debug ("Candidate version string: "
@@ -91,10 +105,13 @@ package body Alire.Origins.Deployers.System.Dnf is
 
    overriding
    function Install (This : Deployer) return Outcome is
+
+      Wrapper : constant String := Wrapper_Command (This);
+
    begin
       Subprocess.Checked_Spawn
         ("sudo", Empty_Vector &
-           "dnf" &
+           Wrapper &
            "-y" &
            "install" &
            This.Base.Package_Name);
@@ -105,4 +122,4 @@ package body Alire.Origins.Deployers.System.Dnf is
          return Alire.Errors.Get (E);
    end Install;
 
-end Alire.Origins.Deployers.System.Dnf;
+end Alire.Origins.Deployers.System.Rh_Rpm_Wrapper;

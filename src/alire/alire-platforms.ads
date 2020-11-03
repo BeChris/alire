@@ -16,6 +16,8 @@ package Alire.Platforms with Preelaborate is
    type Distributions is (Debian,
                           Ubuntu,
                           Msys2,
+                          Rhel, -- RedHat Entreprise Linux
+                          Centos,
                           Fedora,
                           Distro_Unknown);
 
@@ -28,13 +30,15 @@ package Alire.Platforms with Preelaborate is
 
    type Package_Managers is (Apt,
                              Pacman,
+                             Yum,
                              Dnf,
                              Packager_Unknown);
 
    Distro_Manager : constant array (Distributions) of Package_Managers :=
      (Debian | Ubuntu => Apt,
       Msys2           => Pacman,
-      Fedora          => Dnf,
+      Rhel            => Yum,
+      Centos | Fedora => Dnf,
       Distro_Unknown  => Packager_Unknown);
 
    type Toolchains is (System,
